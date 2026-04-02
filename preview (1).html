@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Modo Fase CYBER</title>
+
+<style>
+body {
+    background: radial-gradient(circle at top, #0a0a0f, #050507);
+    color: #e6f1ff;
+    font-family: 'Segoe UI', sans-serif;
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+}
+
+.container {
+    width: 420px;
+    background: rgba(20, 20, 30, 0.7);
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid rgba(0,255,255,0.2);
+    box-shadow: 0 0 25px rgba(0,255,255,0.15);
+}
+
+h2 {
+    text-align: center;
+    color: #00f7ff;
+    text-shadow: 0 0 10px #00f7ff;
+}
+
+.level-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 15px;
+    background: linear-gradient(135deg, #6a00ff, #00f7ff);
+    box-shadow: 0 0 20px rgba(0,255,255,0.6);
+}
+
+.level-number {
+    font-size: 36px;
+    font-weight: bold;
+}
+
+/* XP */
+.bar {
+    height: 20px;
+    background: #111;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #00f7ff, #00ff9c);
+}
+
+/* TASK */
+.task {
+    background: rgba(30,30,40,0.8);
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.done {
+    opacity: 0.4;
+    text-decoration: line-through;
+}
+
+.nofap {
+    border: 1px solid red;
+}
+
+/* BUTTON */
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #00f7ff, #00ff9c);
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* POPUP */
+.popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #00f7ff;
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>ELEVAR</h2>
+
+    <div class="level-box">
+        <span>NÍVEL</span>
+        <span class="level-number" id="level">1</span>
+    </div>
+
+    <div class="bar">
+        <div class="fill" id="fill"></div>
+    </div>
+
+    <p id="xpText">XP: 0 / 100</p>
+
+    <h3>Missões</h3>
+
+    <div class="task" onclick="done(this)">Skin care + Gua Sha</div>
+    <div class="task" onclick="done(this)">Creatina + 15m sol</div>
+    <div class="task" onclick="done(this)">15m Boxe</div>
+    <div class="task" onclick="done(this)">Deep Work Flow</div>
+    <div class="task" onclick="done(this)">Revisar Anki e Inglês</div>
+    <div class="task" onclick="done(this)">Musculação</div>
+    <div class="task" onclick="done(this)">Alongamento</div>
+    <div class="task" onclick="done(this)">Banho quente + Meditação</div>
+    <div class="task" onclick="done(this)">Devocional</div>
+
+    <div class="task nofap" id="nofapTask" onclick="toggleNoFap()">No Fap (dia completo)</div>
+
+    <button onclick="finishDay()">FINALIZAR DIA</button>
+    <button onclick="exportData()">💾 Salvar Backup</button>
+    <button onclick="importData()">📥 Restaurar</button>
+</div>
+
+<div class="popup" id="popup"></div>
+
+<script>
+let level = 1;
+let xp = 0;
+let nofap = true;
+
+/* LOAD */
+const saved = JSON.parse(localStorage.getItem("modoFase"));
+if (saved) level = saved.level || 1;
+
+const tasks = document.querySelectorAll(".task:not(.nofap)");
+const xpPerTask = 100 / (tasks.length + 1);
+
+/* UI */
+function update() {
+    document.getElementById("fill").style.width = xp + "%";
+    document.getElementById("xpText").innerText = `XP: ${xp.toFixed(0)} / 100`;
+    document.getElementById("level").innerText = level;
+}
+
+function popup(msg) {
+    let p = document.getElementById("popup");
+    p.innerText = msg;
+    p.style.display = "block";
+    setTimeout(() => p.style.display = "none", 1200);
+}
+
+/* SAVE */
+function save() {
+    localStorage.setItem("modoFase", JSON.stringify({ level }));
+}
+
+/* TASK */
+function done(el) {
+    if (el.classList.contains("done")) return;
+
+    el.classList.add("done");
+    xp += xpPerTask;
+
+    popup("+XP");
+    update();
+}
+
+/* NOFAP */
+function toggleNoFap() {
+    nofap = !nofap;
+    let el = document.getElementById("nofapTask");
+
+    el.style.opacity = nofap ? "1" : "0.4";
+    popup(nofap ? "DISCIPLINA 🔥" : "QUEBRA...");
+}
+
+/* FINALIZAR DIA (🔥 SAVE AQUI) */
+function finishDay() {
+    let completed = document.querySelectorAll(".done").length;
+
+    if (completed === tasks.length && nofap) {
+        level++;
+        xp = 0;
+
+        popup("LEVEL UP ⚡ DIA PERFEITO");
+
+        save(); // 🔥 SALVA SÓ AQUI
+
+        document.querySelectorAll(".task").forEach(t => t.classList.remove("done"));
+        nofap = true;
+        document.getElementById("nofapTask").style.opacity = "1";
+
+    } else {
+        popup("MISSÕES INCOMPLETAS");
+    }
+
+    update();
+}
+
+/* BACKUP */
+function exportData() {
+    const data = localStorage.getItem("modoFase");
+    navigator.clipboard.writeText(data);
+    popup("Backup copiado!");
+}
+
+function importData() {
+    let data = prompt("Cole o backup:");
+    if (!data) return;
+
+    localStorage.setItem("modoFase", data);
+    location.reload();
+}
+
+update();
+</script>
+
+</body>
+</html>
